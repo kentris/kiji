@@ -133,15 +133,19 @@ class KijiDownloader:
         download_articles = self.download_articles[datasource]
         articles = []
         for au in article_urls:
-            title, date_time, body = download_articles(au)
-            article = Article(
-                title,
-                body,
-                date_time,
-                datasource.value,
-                genre.value
-            )
-            articles.append(article)
+            try:
+                title, date_time, body = download_articles(au)
+                article = Article(
+                    title,
+                    body,
+                    date_time,
+                    datasource.value,
+                    genre.value
+                )
+                articles.append(article)
+            except urllib.request.URLError as e:
+                message = f"URLError with url={au}. {e}"
+                logging.warning(message)
 
         message = f"\tDownloaded {len(articles)} {genre.name} articles from {datasource.name}"
         logging.info(message)
@@ -343,6 +347,8 @@ class KijiDownloader:
 
 def main():
     output_dir = os.path.join("data", "incoming")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     kd = KijiDownloader()
     kd.download(output_dir)
 
