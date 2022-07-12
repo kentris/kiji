@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 import datetime
 import enum
 import logging
 import os
 import pandas as pd
+import pickle
 import re
 import urllib
 from urllib.request import Request, urlopen
@@ -72,6 +73,13 @@ class KijiDownloader:
             DataSource.NHK: self.download_articles_nhk,
             DataSource.Asahi: self.download_articles_asahi
         }
+        self.previously_processed_urls = defaultdict(defaultdict(list).copy)
+        self.ppu_file = os.path.join("data", "prev_processed_urls.pkl")
+
+    def open_previously_processed_urls(self):
+        if os.path.isfile(self.ppu_file):
+            with open(self.ppu_file, 'rb') as f:
+                self.previously_processed_urls = pickle.load(f)
 
     def download(self, output_dir=os.getcwd()):
         """Download and save the articles from sources.
@@ -79,6 +87,9 @@ class KijiDownloader:
         :return N/A:
         """
         self.start_logger()
+
+        # Load in previously handled urls
+        self.open_previously_processed_urls()
 
         # Download and parse the articles
         articles = []
@@ -92,6 +103,10 @@ class KijiDownloader:
         article_df = pd.DataFrame(articles, columns=Article._fields)
         article_df.to_csv(filename, index=False)
         logging.info("Finished downloading")
+
+        # Save new previously processed URLs
+        with open(self.ppu_file, 'wb') as f:
+            pickle.dump(self.previously_processed_urls, f)
 
     def start_logger(self):
         """Initiate the logger.
@@ -120,19 +135,26 @@ class KijiDownloader:
         """
         # Get information from the provided Source
         url, genre, datasource = source.url, source.genre, source.datasource
-        message = f"Downloading {genre.name} from {datasource.name}"
-        logging.info(message)
+        logging.info(f"Downloading {genre.name} from {datasource.name}")
 
         # Get the article URLs for the specified URL of the datasource
         download_rss = self.download_rss[datasource]
         article_urls = download_rss(url)
-        message = f"\tDownloading {len(article_urls)} {genre.name} articles from {datasource.name}"
-        logging.info(message)
+        logging.info(f"\tDownloading {len(article_urls)} {genre.name} articles from {datasource.name}")
+
+        # Filter out URLs that we have already processed
+        filtered_article_urls = [
+            au for au in article_urls
+            if au not in self.previously_processed_urls[datasource][genre]
+        ]
+        num_new_articles = len(filtered_article_urls)
+        num_old_articles = len(article_urls) - len(filtered_article_urls)
+        logging.info(f"\t{num_old_articles} of articles already processed. Processing {num_new_articles} articles")
 
         # Parse the article html and create an Article object for saving
         download_articles = self.download_articles[datasource]
         articles = []
-        for au in article_urls:
+        for au in filtered_article_urls:
             try:
                 title, date_time, body = download_articles(au)
                 article = Article(
@@ -147,8 +169,11 @@ class KijiDownloader:
                 message = f"URLError with url={au}. {e}"
                 logging.warning(message)
 
-        message = f"\tDownloaded {len(articles)} {genre.name} articles from {datasource.name}"
-        logging.info(message)
+        logging.info(f"\tDownloaded {len(articles)} {genre.name} articles from {datasource.name}")
+
+        # Update Previously processed urls
+        self.previously_processed_urls[datasource][genre] = article_urls
+        logging.info(f"\tUpdated previously processed URLs for {datasource.name}.{genre.name}")
 
         return articles
 
