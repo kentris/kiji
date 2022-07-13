@@ -14,6 +14,7 @@ class KijiUploader:
         self.INSERT_ARTICLE = """INSERT INTO articles ('title', 'body', 'pub_date', 'source', 'genre') VALUES (?,?,?,?,?)"""
         self.db = None
         self.conn = None
+        self.dir_path = os.path.dirname(os.path.realpath(__file__))
 
     def upload(self, db: str, upload_dir: str, uploaded_dir: str):
         """
@@ -30,14 +31,14 @@ class KijiUploader:
         logging.info(f"Processing {len(os.listdir(upload_dir))} article files in {upload_dir}.")
         for article_file in os.listdir(upload_dir):
             logging.info(f"Processing {article_file}.")
-            article_df = pd.read_csv(os.path.join(upload_dir, article_file))
+            article_df = pd.read_csv(os.path.join(self.dir_path, upload_dir, article_file))
             article_tuples = [tuple(row) for row in article_df.values]
             self.process_articles(article_tuples)
             logging.info(f"Finished processing {article_file}")
             # Move file to completed directory
             os.rename(
-                os.path.join(upload_dir, article_file),
-                os.path.join(uploaded_dir, article_file)
+                os.path.join(self.dir_path, upload_dir, article_file),
+                os.path.join(self.dir_path, uploaded_dir, article_file)
             )
         logging.info("Finished processing article files.")
 
@@ -49,9 +50,9 @@ class KijiUploader:
         :return N/A:
         """
         current_ts = datetime.datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-        file_name = os.path.join("logs", f"KijiUploader{current_ts}.log")
+        if not os.path.exists(os.path.join(self.dir_path, "logs")):
+            os.makedirs(os.path.join(self.dir_path, "logs"))
+        file_name = os.path.join(self.dir_path, "logs", f"KijiDownloader{current_ts}.log")
 
         logging.basicConfig(
             filename=file_name,
@@ -134,16 +135,17 @@ class KijiUploader:
 
 
 def main():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     data_dir = "data"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    db = os.path.join("data", "kiji.db")
+    db = os.path.join(dir_path, data_dir, "kiji.db")
 
-    upload_dir = os.path.join("data", "incoming")
+    upload_dir = os.path.join(dir_path, data_dir, "incoming")
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
 
-    uploaded_dir = os.path.join("data", "processed")
+    uploaded_dir = os.path.join(dir_path, data_dir, "processed")
     if not os.path.exists(uploaded_dir):
         os.makedirs(uploaded_dir)
 

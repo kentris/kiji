@@ -73,8 +73,9 @@ class KijiDownloader:
             DataSource.NHK: self.download_articles_nhk,
             DataSource.Asahi: self.download_articles_asahi
         }
+        self.dir_path = os.path.dirname(os.path.realpath(__file__))
         self.previously_processed_urls = defaultdict(defaultdict(list).copy)
-        self.ppu_file = os.path.join("data", "prev_processed_urls.pkl")
+        self.ppu_file = os.path.join(self.dir_path, "data", "prev_processed_urls.pkl")
 
     def open_previously_processed_urls(self):
         if os.path.isfile(self.ppu_file):
@@ -99,7 +100,7 @@ class KijiDownloader:
 
         # Create a dataframe containing the parsed articles, and save to CSV
         dt = datetime.datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        filename = os.path.join(output_dir, f"japan_articles_{dt}.csv")
+        filename = os.path.join(self.dir_path, output_dir, f"japan_articles_{dt}.csv")
         article_df = pd.DataFrame(articles, columns=Article._fields)
         article_df.to_csv(filename, index=False)
         logging.info("Finished downloading")
@@ -114,9 +115,9 @@ class KijiDownloader:
         :return N/A:
         """
         current_ts = datetime.datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-        file_name = os.path.join("logs", f"KijiDownloader{current_ts}.log")
+        if not os.path.exists(os.path.join(self.dir_path, "logs")):
+            os.makedirs(os.path.join(self.dir_path, "logs"))
+        file_name = os.path.join(self.dir_path, "logs", f"KijiDownloader{current_ts}.log")
 
         logging.basicConfig(
             filename=file_name,
