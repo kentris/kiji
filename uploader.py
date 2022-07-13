@@ -52,7 +52,7 @@ class KijiUploader:
         current_ts = datetime.datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
         if not os.path.exists(os.path.join(self.dir_path, "logs")):
             os.makedirs(os.path.join(self.dir_path, "logs"))
-        file_name = os.path.join(self.dir_path, "logs", f"KijiDownloader{current_ts}.log")
+        file_name = os.path.join(self.dir_path, "logs", f"KijiUploader{current_ts}.log")
 
         logging.basicConfig(
             filename=file_name,
