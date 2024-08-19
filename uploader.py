@@ -11,8 +11,8 @@ class KijiUploader:
     def __init__(self):
         self.CREATE_TABLES = [
             """CREATE TABLE IF NOT EXISTS "articles" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "title" TEXT NOT NULL UNIQUE, "body" TEXT NOT NULL, "pub_date" TEXT, "source" INTEGER, "genre" INTEGER, "status" INTEGER)""",
-            """CREATE TABLE "genre" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT, "description" TEXT)""",
-            """CREATE TABLE "source" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT, "description" TEXT)"""
+            """CREATE TABLE IF NOT EXISTS "genre" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT, "description" TEXT)""",
+            """CREATE TABLE IF NOT EXISTS "source" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT, "description" TEXT)"""
         ]
         self.CHECK_FOR_ARTICLE = """SELECT * FROM articles WHERE TITLE = ? AND BODY = ? AND PUB_DATE = ? AND SOURCE = ? AND GENRE = ?"""
         self.INSERT_ARTICLE = """INSERT INTO articles ('title', 'body', 'pub_date', 'source', 'genre', 0) VALUES (?,?,?,?,?, ?)"""
