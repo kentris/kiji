@@ -30,16 +30,19 @@ class KijiUploader:
         # Iterate over all files to be processed
         logging.info(f"Processing {len(os.listdir(upload_dir))} article files in {upload_dir}.")
         for article_file in os.listdir(upload_dir):
-            logging.info(f"Processing {article_file}.")
-            article_df = pd.read_csv(os.path.join(self.dir_path, upload_dir, article_file))
-            article_tuples = [tuple(row) for row in article_df.values]
-            self.process_articles(article_tuples)
-            logging.info(f"Finished processing {article_file}")
-            # Move file to completed directory
-            os.rename(
-                os.path.join(self.dir_path, upload_dir, article_file),
-                os.path.join(self.dir_path, uploaded_dir, article_file)
-            )
+            try:
+                logging.info(f"Processing {os.path.join(self.dir_path, upload_dir, article_file)}.")
+                article_df = pd.read_csv(os.path.join(self.dir_path, upload_dir, article_file))
+                article_tuples = [tuple(row) for row in article_df.values]
+                self.process_articles(article_tuples)
+                logging.info(f"Finished processing {article_file}")
+                # Move file to completed directory
+                os.rename(
+                    os.path.join(self.dir_path, upload_dir, article_file),
+                    os.path.join(self.dir_path, uploaded_dir, article_file)
+                )
+            except Exception as e:
+                logging.warning("Error processing file.", e)
         logging.info("Finished processing article files.")
 
         self.close_db_connection()
