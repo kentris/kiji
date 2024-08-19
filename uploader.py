@@ -71,7 +71,7 @@ class KijiUploader:
         :param db: The database we're connecting to
         :return N/A:
         """
-        logging.info("Establishing database connection.")
+        logging.info(f"Establishing database connection: {db}.")
         conn = sqlite3.connect(db)
         db = conn.cursor()
         db.execute(self.CREATE_TABLE)
