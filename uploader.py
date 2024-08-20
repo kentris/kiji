@@ -143,17 +143,16 @@ class KijiUploader:
 
 
 def main():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    data_dir = "data"
+    data_dir = os.path.join(os.path.realpath(__file__), "data")
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    db = os.path.join(dir_path, data_dir, "kiji.db")
+    db = os.path.join(data_dir, "kiji.db")
 
-    upload_dir = os.path.join(dir_path, data_dir, "incoming")
+    upload_dir = os.path.join(data_dir, "incoming")
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
 
-    uploaded_dir = os.path.join(dir_path, data_dir, "processed")
+    uploaded_dir = os.path.join(data_dir, "processed")
     if not os.path.exists(uploaded_dir):
         os.makedirs(uploaded_dir)
 
